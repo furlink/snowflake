@@ -105,11 +105,9 @@ impl Default for ProcessUniqueId {
 #[cfg(test)]
 mod test {
     extern crate rand;
-    extern crate test;
     extern crate threadpool;
     extern crate time;
     extern crate uuid;
-    use self::test::Bencher;
     use self::threadpool::ThreadPool;
     use super::{next_global, ProcessUniqueId};
     use std::sync::mpsc::channel;
@@ -131,20 +129,22 @@ mod test {
 
         for i in (u64::MAX - 11)..(u64::MAX) {
             assert!(
-                ProcessUniqueId::new() == ProcessUniqueId {
-                    prefix: first_unique_id.prefix,
-                    offset: i + 1,
-                }
+                ProcessUniqueId::new()
+                    == ProcessUniqueId {
+                        prefix: first_unique_id.prefix,
+                        offset: i + 1,
+                    }
             );
         }
         let next = ProcessUniqueId::new();
         assert!(next.prefix != first_unique_id.prefix);
         assert!(next.offset == 0);
         assert!(
-            ProcessUniqueId::new() == ProcessUniqueId {
-                prefix: next.prefix,
-                offset: 1,
-            }
+            ProcessUniqueId::new()
+                == ProcessUniqueId {
+                    prefix: next.prefix,
+                    offset: 1,
+                }
         );
     }
 
@@ -158,7 +158,8 @@ mod test {
                     assert_eq!(unique_id.offset, 0);
                     unique_id.prefix
                 })
-            }).collect();
+            })
+            .collect();
 
         // Start them all at once.
         for thread in &threads {
@@ -172,77 +173,77 @@ mod test {
         assert_eq!(old_len, results.len());
     }
 
-    #[bench]
-    fn bench_next_global(b: &mut Bencher) {
-        b.iter(|| {
-            next_global();
-        });
-    }
+    // #[bench]
+    // fn bench_next_global(b: &mut Bencher) {
+    //     b.iter(|| {
+    //         next_global();
+    //     });
+    // }
 
-    #[bench]
-    fn bench_next_global_threaded(b: &mut Bencher) {
-        let pool = ThreadPool::new(4usize);
-        b.iter(|| {
-            let (tx, rx) = channel();
-            for _ in 0..4 {
-                let tx = tx.clone();
-                pool.execute(move || {
-                    for _ in 0..1000 {
-                        next_global();
-                    }
-                    tx.send(()).unwrap();
-                });
-            }
-            rx.iter().take(4).count();
-        });
-    }
+    // #[bench]
+    // fn bench_next_global_threaded(b: &mut Bencher) {
+    //     let pool = ThreadPool::new(4usize);
+    //     b.iter(|| {
+    //         let (tx, rx) = channel();
+    //         for _ in 0..4 {
+    //             let tx = tx.clone();
+    //             pool.execute(move || {
+    //                 for _ in 0..1000 {
+    //                     next_global();
+    //                 }
+    //                 tx.send(()).unwrap();
+    //             });
+    //         }
+    //         rx.iter().take(4).count();
+    //     });
+    // }
 
-    #[bench]
-    fn bench_unique_id(b: &mut Bencher) {
-        b.iter(|| {
-            ProcessUniqueId::new();
-        });
-    }
+    // #[bench]
+    // fn bench_unique_id(b: &mut Bencher) {
+    //     b.iter(|| {
+    //         ProcessUniqueId::new();
+    //     });
+    // }
 
-    #[bench]
-    fn bench_random_id(b: &mut Bencher) {
-        use self::rand::random;
-        b.iter(|| {
-            let _: u64 = random();
-        });
-    }
+    // #[bench]
+    // fn bench_random_id(b: &mut Bencher) {
+    //     use self::rand::random;
+    //     b.iter(|| {
+    //         let _: u64 = random();
+    //     });
+    // }
 
-    #[bench]
-    fn bench_time_id(b: &mut Bencher) {
-        use self::time::get_time;
-        b.iter(|| {
-            let _ = get_time();
-        });
-    }
+    // #[bench]
+    // fn bench_time_id(b: &mut Bencher) {
+    //     use self::time::get_time;
+    //     b.iter(|| {
+    //         let _ = get_time();
+    //     });
+    // }
 
-    #[bench]
-    fn bench_uuid(b: &mut Bencher) {
-        use self::uuid::Uuid;
-        b.iter(|| {
-            Uuid::new_v4();
-        });
-    }
+    // #[bench]
+    // fn bench_uuid(b: &mut Bencher) {
+    //     use self::uuid::Uuid;
+    //     b.iter(|| {
+    //         Uuid::new_v4();
+    //     });
+    // }
 
-    #[bench]
-    fn bench_unique_id_threaded(b: &mut Bencher) {
-        let pool = ThreadPool::new(4usize);
-        b.iter(|| {
-            let (tx, rx) = channel();
-            for _ in 0..4 {
-                let tx = tx.clone();
-                pool.execute(move || {
-                    for _ in 0..1000 {
-                        ProcessUniqueId::new();
-                    }
-                    tx.send(()).unwrap();
-                });
-            }
-            rx.iter().take(4).count();
-        });
-    }
+    // #[bench]
+    // fn bench_unique_id_threaded(b: &mut Bencher) {
+    //     let pool = ThreadPool::new(4usize);
+    //     b.iter(|| {
+    //         let (tx, rx) = channel();
+    //         for _ in 0..4 {
+    //             let tx = tx.clone();
+    //             pool.execute(move || {
+    //                 for _ in 0..1000 {
+    //                     ProcessUniqueId::new();
+    //                 }
+    //                 tx.send(()).unwrap();
+    //             });
+    //         }
+    //         rx.iter().take(4).count();
+    //     });
+    // }
 }
