@@ -9,10 +9,9 @@ use std::cell::UnsafeCell;
 
 use std::default::Default;
 use std::fmt;
-use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
-use std::{u64, usize};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
-static GLOBAL_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
+static GLOBAL_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 fn next_global() -> usize {
     let mut prev = GLOBAL_COUNTER.load(Ordering::Relaxed);
@@ -21,7 +20,17 @@ fn next_global() -> usize {
             prev < usize::MAX,
             "Snow Crash: Go home and reevaluate your threading model!"
         );
-        let old_value = GLOBAL_COUNTER.compare_and_swap(prev, prev + 1, Ordering::Relaxed);
+
+        let old_value = match GLOBAL_COUNTER.compare_exchange(
+            prev,
+            prev + 1,
+            Ordering::Relaxed,
+            Ordering::Relaxed,
+        ) {
+            Ok(value) => value,
+            Err(value) => value,
+        };
+
         if old_value == prev {
             return prev;
         } else {
@@ -104,15 +113,8 @@ impl Default for ProcessUniqueId {
 
 #[cfg(test)]
 mod test {
-    extern crate rand;
-    extern crate threadpool;
-    extern crate time;
-    extern crate uuid;
-    use self::threadpool::ThreadPool;
-    use super::{next_global, ProcessUniqueId};
-    use std::sync::mpsc::channel;
+    use super::ProcessUniqueId;
     use std::thread;
-    use std::u64;
 
     // Glass box tests.
 
@@ -150,7 +152,7 @@ mod test {
 
     #[test]
     fn test_unique_id_threaded() {
-        let threads: Vec<_> = (0..10)
+        let threads: Vec<_> = (0..128)
             .map(|_| {
                 thread::spawn(move || {
                     thread::park();
