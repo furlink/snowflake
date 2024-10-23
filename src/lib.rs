@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(test, feature(test))]
 //! A crate for quickly generating unique IDs with guaranteed properties.
 //!
 //! This crate currently includes guaranteed process unique IDs but may include new ID types in the
